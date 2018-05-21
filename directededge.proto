@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+message DirectedEdge {
+    uint64 endnode = 1;
+    uint64 accessrestriction = 2;
+    uint64 startrestriction = 3;
+    uint64 endrestriction = 4;
+    uint64 exitsign = 5;
+    uint64 forward = 6;
+    uint64 driveonright = 7;
+    uint64 speed = 8;
+    uint64 truckspeed = 9;
+    uint64 restrictions = 10;
+    uint64 lanecount = 11;
+    uint64 bikenetwork = 12;
+    uint64 use = 13;
+    uint64 speedtype = 14;
+    uint64 oppindex = 15;
+    uint64 link = 16;
+}
