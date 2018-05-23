@@ -8,6 +8,8 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/jmiller-boundless/fremontii"
+
 	"github.com/qedus/osmpbf"
 )
 
@@ -48,7 +50,7 @@ func main() {
 					}
 					nc++
 				case *osmpbf.Way:
-					// Process Way v.
+					d := &directededge.DirectedEdge{}
 					wc++
 				case *osmpbf.Relation:
 					// Process Relation v.
