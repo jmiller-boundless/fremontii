@@ -14,6 +14,18 @@ import (
 	"github.com/qedus/osmpbf"
 )
 
+type SimpleWay struct {
+	id           int64
+	nodeids      []int64
+	oneway       string
+	highway      string
+	junction     string
+	access       string
+	motorVehicle string
+	service      string
+	area         string
+}
+
 func main() {
 	argsWithoutProg := os.Args[1:]
 	if len(argsWithoutProg) == 1 {
