@@ -14,7 +14,7 @@ import (
 
 type SimpleWay struct {
 	id           int64
-	nodeids      []int64
+	nodes        []SimpleNode
 	oneway       string
 	highway      string
 	junction     string
@@ -25,10 +25,10 @@ type SimpleWay struct {
 }
 
 type SimpleNode struct {
-	id        int64
-	lat       float64
-	lon       float64
-	countflag byte
+	Id        int64
+	Lat       float64
+	Lon       float64
+	Countflag byte
 }
 
 func main() {
@@ -41,7 +41,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer f.Close()
+		//defer f.Close()
 
 		var cache map[int64]*SimpleNode
 		cache = make(map[int64]*SimpleNode)
@@ -67,13 +67,13 @@ func main() {
 				switch v := v.(type) {
 				case *osmpbf.Node:
 					sn := &SimpleNode{}
-					sn.id = v.ID
-					sn.lat = v.Lat
-					sn.lon = v.Lon
+					sn.Id = v.ID
+					sn.Lat = v.Lat
+					sn.Lon = v.Lon
 					if isBarrier(v) {
-						sn.countflag = 1 | 0x20
+						sn.Countflag = 1 | 0x20
 					} else {
-						sn.countflag = 1
+						sn.Countflag = 1
 					}
 					cache[v.ID] = sn
 					nc++
@@ -88,10 +88,61 @@ func main() {
 				}
 			}
 		}
+		f.Close()
 		elapsed := time.Since(start)
 		start2 := time.Now()
 		log.Printf("Node storage took: ", elapsed)
 
+		//for _, value := range cache {
+		//	if value.Countflag != 1 {
+		//		PrettyPrint(value)
+		//	}
+		//}
+
+		g, err := os.Open(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		//defer g.Close()
+		q := osmpbf.NewDecoder(g)
+
+		// use more memory from the start, it is faster
+		q.SetBufferSize(osmpbf.MaxBlobSize)
+
+		// start decoding with several goroutines, it is faster
+		err = q.Start(runtime.GOMAXPROCS(-1))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for {
+			if v, err := q.Decode(); err == io.EOF {
+				break
+			} else if err != nil {
+				log.Fatal(err)
+			} else {
+				switch v := v.(type) {
+				case *osmpbf.Node:
+					nc++
+				case *osmpbf.Way:
+					//d := &directededge.DirectedEdge{}
+					d := &SimpleWay{}
+					d.nodes = make([]SimpleNode, len(v.NodeIDs))
+					for key, nodeid := range v.NodeIDs {
+						if val, ok := cache[nodeid]; ok {
+							d.nodes[key] = *val
+						}
+					}
+					wc++
+				case *osmpbf.Relation:
+					// Process Relation v.
+					rc++
+				default:
+					log.Fatalf("unknown type %T\n", v)
+				}
+			}
+		}
+		g.Close()
 		elapsed2 := time.Since(start2)
 		log.Printf("Way processing took: ", elapsed2)
 		fmt.Printf("Nodes: %d, Ways: %d, Relations: %d\n", nc, wc, rc)
