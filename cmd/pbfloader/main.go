@@ -9,27 +9,10 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/jmiller-boundless/fremontii"
+
 	"github.com/qedus/osmpbf"
 )
-
-type SimpleWay struct {
-	id           int64
-	nodes        []SimpleNode
-	oneway       string
-	highway      string
-	junction     string
-	access       string
-	motorVehicle string
-	service      string
-	area         string
-}
-
-type SimpleNode struct {
-	Id        int64
-	Lat       float64
-	Lon       float64
-	Countflag byte
-}
 
 func main() {
 	argsWithoutProg := os.Args[1:]
@@ -43,10 +26,10 @@ func main() {
 		}
 		defer f.Close()
 
-		var cache map[int64]*simplenode
-		cache = make(map[int64]*simplenode)
+		var cache map[int64]*directededge.SimpleNode
+		cache = make(map[int64]*directededge.SimpleNode)
 
-		var sws []*simpleway
+		var sws []*directededge.SimpleWay
 
 		d := osmpbf.NewDecoder(f)
 
@@ -69,10 +52,10 @@ func main() {
 				switch v := v.(type) {
 				case *osmpbf.Node:
 					//sn := &SimpleNode{}
-					sn := &simplenode{}
-					sn.Id = v.ID
-					sn.Lat = v.Lat
-					sn.Lon = v.Lon
+					sn := &directededge.SimpleNode{}
+					sn.Id = uint64(v.ID)
+					sn.Lat = float32(v.Lat)
+					sn.Lon = float32(v.Lon)
 					if isBarrier(v) {
 						sn.Countflag = 1 | 0x20
 					} else {
@@ -129,11 +112,11 @@ func main() {
 					nc++
 				case *osmpbf.Way:
 					//d := &directededge.DirectedEdge{}
-					d := &simpleway{}
-					d.nodes = make([]simplenode, len(v.NodeIDs))
+					d := &directededge.SimpleWay{}
+					d.Nodes = make([]*directededge.SimpleNode, len(v.NodeIDs))
 					for key, nodeid := range v.NodeIDs {
 						if val, ok := cache[nodeid]; ok {
-							d.nodes[key] = *val
+							d.Nodes[key] = val
 						}
 					}
 					processWayTags(v, d)
@@ -192,26 +175,26 @@ func isBarrier(n *osmpbf.Node) bool {
 	return out
 }
 
-func processWayTags(w *osmpbf.Way, sw *simpleway) {
+func processWayTags(w *osmpbf.Way, sw *directededge.SimpleWay) {
 	if val, ok := w.Tags["oneway"]; ok {
-		sw.oneway = val
+		sw.Oneway = val
 	}
 	if val, ok := w.Tags["highway"]; ok {
-		sw.highway = val
+		sw.Highway = val
 	}
 	if val, ok := w.Tags["junction"]; ok {
-		sw.junction = val
+		sw.Junction = val
 	}
 	if val, ok := w.Tags["access"]; ok {
-		sw.access = val
+		sw.Access = val
 	}
 	if val, ok := w.Tags["motor_vehicle"]; ok {
-		sw.motorVehicle = val
+		sw.MotorVehicle = val
 	}
 	if val, ok := w.Tags["service"]; ok {
-		sw.service = val
+		sw.Service = val
 	}
 	if val, ok := w.Tags["area"]; ok {
-		sw.area = val
+		sw.Area = val
 	}
 }
