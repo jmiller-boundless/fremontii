@@ -41,10 +41,12 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		//defer f.Close()
+		defer f.Close()
 
-		var cache map[int64]*SimpleNode
-		cache = make(map[int64]*SimpleNode)
+		var cache map[int64]*simplenode
+		cache = make(map[int64]*simplenode)
+
+		var sws []*simpleway
 
 		d := osmpbf.NewDecoder(f)
 
@@ -66,7 +68,8 @@ func main() {
 			} else {
 				switch v := v.(type) {
 				case *osmpbf.Node:
-					sn := &SimpleNode{}
+					//sn := &SimpleNode{}
+					sn := &simplenode{}
 					sn.Id = v.ID
 					sn.Lat = v.Lat
 					sn.Lon = v.Lon
@@ -88,7 +91,7 @@ func main() {
 				}
 			}
 		}
-		f.Close()
+		//f.Close()
 		elapsed := time.Since(start)
 		start2 := time.Now()
 		log.Printf("Node storage took: ", elapsed)
@@ -103,7 +106,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		//defer g.Close()
+		defer g.Close()
 		q := osmpbf.NewDecoder(g)
 
 		// use more memory from the start, it is faster
@@ -126,13 +129,15 @@ func main() {
 					nc++
 				case *osmpbf.Way:
 					//d := &directededge.DirectedEdge{}
-					d := &SimpleWay{}
-					d.nodes = make([]SimpleNode, len(v.NodeIDs))
+					d := &simpleway{}
+					d.nodes = make([]simplenode, len(v.NodeIDs))
 					for key, nodeid := range v.NodeIDs {
 						if val, ok := cache[nodeid]; ok {
 							d.nodes[key] = *val
 						}
 					}
+					processWayTags(v, d)
+					sws = append(sws, d)
 					wc++
 				case *osmpbf.Relation:
 					// Process Relation v.
@@ -142,7 +147,7 @@ func main() {
 				}
 			}
 		}
-		g.Close()
+		//g.Close()
 		elapsed2 := time.Since(start2)
 		log.Printf("Way processing took: ", elapsed2)
 		fmt.Printf("Nodes: %d, Ways: %d, Relations: %d\n", nc, wc, rc)
@@ -185,4 +190,28 @@ func isBarrier(n *osmpbf.Node) bool {
 	}
 
 	return out
+}
+
+func processWayTags(w *osmpbf.Way, sw *simpleway) {
+	if val, ok := w.Tags["oneway"]; ok {
+		sw.oneway = val
+	}
+	if val, ok := w.Tags["highway"]; ok {
+		sw.highway = val
+	}
+	if val, ok := w.Tags["junction"]; ok {
+		sw.junction = val
+	}
+	if val, ok := w.Tags["access"]; ok {
+		sw.access = val
+	}
+	if val, ok := w.Tags["motor_vehicle"]; ok {
+		sw.motorVehicle = val
+	}
+	if val, ok := w.Tags["service"]; ok {
+		sw.service = val
+	}
+	if val, ok := w.Tags["area"]; ok {
+		sw.area = val
+	}
 }

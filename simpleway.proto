@@ -1,0 +1,25 @@
+syntax = "proto3";
+package directededge;
+
+message SimpleWay{
+    uint64 id = 1;
+    repeated SimpleNode nodes = 2;
+    string oneway = 3;
+    string highway = 4;
+    string junction = 5;
+    string access = 6;
+    string motorVehicle = 7;
+    string service = 8;
+    string area = 9;
+}
+
+message SimpleNode{
+    uint64 id = 1;
+    float lat = 2;
+    float lon = 3;
+    fixed32 countflag = 4;
+}
+
+message WayCollection{
+    repeated SimpleWay ways = 1;
+}
