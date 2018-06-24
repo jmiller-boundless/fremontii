@@ -23,3 +23,18 @@ message SimpleNode{
 message WayCollection{
     repeated SimpleWay ways = 1;
 }
+
+message WrittenRoadSegment{
+    uint64 graphEdgeId = 1;
+    uint64 from = 2;
+    uint64 to = 3;
+    uint64 segmentLengthMm = 4;
+    bool isAccessOnly = 5;
+}
+
+message OsmWay{
+    uint64 id = 1;
+    SimpleWay simpleWay = 2;
+    repeated WrittenRoadSegment forwardRoadSegments = 3;
+    repeated WrittenRoadSegment backwardRoadSegments = 4;
+}
