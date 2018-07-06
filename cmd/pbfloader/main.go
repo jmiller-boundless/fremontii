@@ -198,3 +198,7 @@ func processWayTags(w *osmpbf.Way, sw *directededge.SimpleWay) {
 		sw.Area = val
 	}
 }
+func isNavigable() {
+	navigableHighwayTypes := [16]string{"motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "tertiary_link", "living_street", "residential", "unclassified", "service", "road", "access"}
+	fmt.Println(navigableHighwayTypes)
+}
